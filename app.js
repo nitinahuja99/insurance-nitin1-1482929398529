@@ -1,28 +1,54 @@
-/*eslint-env node*/
+'use strict';
 
-//------------------------------------------------------------------------------
-// node.js starter application for Bluemix
-//------------------------------------------------------------------------------
+const Slimbot = require('slimbot');
+const slimbot = new Slimbot('316885611:AAFsCSJja-OVfRaj5dgRFtJr87PHSkH3D8M');
 
-// This application uses express as its web server
-// for more info, see: http://expressjs.com
-var express = require('express');
-
-// cfenv provides access to your Cloud Foundry environment
-// for more info, see: https://www.npmjs.com/package/cfenv
-var cfenv = require('cfenv');
-
-// create a new express server
-var app = express();
-
-// serve the files out of ./public as our main files
-app.use(express.static(__dirname + '/public'));
-
-// get the app environment from Cloud Foundry
-var appEnv = cfenv.getAppEnv();
-
-// start server on the specified port and binding host
-app.listen(appEnv.port, '0.0.0.0', function() {
-  // print a message when the server starts listening
-  console.log("server starting on " + appEnv.url);
+const watson = require('watson-developer-cloud');
+const conversation = watson.conversation({
+  username: '5c8173e9-e913-4060-be0c-433f87a1bc17',
+  password: 'ubdTHlLmL1gS',
+  version: 'v1',
+  version_date: '2016-09-20'
 });
+
+
+var fromId;
+var context = {};
+
+// Register listeners
+
+slimbot.on('message', msg => {
+	fromId = msg.from.id;
+  	var firstName = msg.from.first_name;
+  	var reply = msg.message_id;
+
+  	var strQuery = msg.text;
+  	var strResponse;
+
+  	conversation.message({
+    	workspace_id: '7a31bf49-5cb1-4920-9efd-403ed80bc3d6',
+    	input: {'text': strQuery},
+    	context: context
+ 		},  
+ 		function(err, result) {
+    		if (err)
+      			console.log('error:', err);
+    		else
+	      	strResponse = result.output.text.toString();
+          context = result.context;
+	      	//console.log("\n.....................................\n");
+	      	//console.log("Response: " + strResponse);
+	      	return slimbot.sendMessage(fromId, strResponse).then(message => {
+  				console.log(msg.text);
+  				console.log("\n----------------\n");
+  				console.log(message.result.text);
+  				console.log("\n================\n\n");
+			});
+		})
+	});
+
+
+
+// Call API
+
+slimbot.startPolling();
