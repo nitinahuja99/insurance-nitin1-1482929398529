@@ -1,0 +1,10 @@
+applications:
+- path: .
+  memory: 256M
+  instances: 1
+  domain: mybluemix.net
+  name: insurance-nitin1
+  host: insurance-nitin
+  disk_quota: 1024M
+  services:
+  - availability-monitoring-auto
